@@ -1,0 +1,6 @@
+description = "Genetic algorithm library"
+requires    = ""
+version     = "1.01"
+
+archive(byte)   = "genePool.cma"
+archive(native) = "genePool.cmxa"

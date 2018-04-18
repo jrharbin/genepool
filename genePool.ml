@@ -20,7 +20,7 @@ module Internal = struct
 			satisfied := true; 
 			value := rand
 		end
-	done; 
+	done;
 	!value
 
 	(* sort by first element of tuple in descending order *)
@@ -64,11 +64,14 @@ open Internal
 		report    - optionally output information about the best genome of each generation 
 		seed      - optional initial seed population
 		stop      - optional stopping predicate
-*)
+ *)
+
+type gen_number = int
+   
 type ('genome, 'fitness) ga_spec = {
-	evaluate : 'genome -> 'fitness;
-	mutate : 'genome -> 'genome;
-	crossover : ('genome * 'genome) -> 'genome;
+	evaluate : gen_number -> 'genome -> 'fitness;
+	mutate : gen_number -> 'genome -> 'genome;
+	crossover : gen_number -> ('genome * 'genome) -> 'genome;
 	genRandom: unit -> 'genome;
 	seed: 'genome array option;
 	report: (int -> 'genome -> 'fitness -> unit) option; 
@@ -115,18 +118,18 @@ let cull genomes results n =
 	increase a population by mutating clones and crossing between genomes
 *)
 
-let reproduce genomes nMutations nCrossovers mutate crossover =
+let reproduce genomes nMutations nCrossovers mutate crossover gen =
 	let nGenomes = Array.length genomes in  
 	let total = nGenomes + nMutations + nCrossovers  in 
 	let fn idx = 
 		if idx < nGenomes  then genomes.(idx)
 		else if idx < nGenomes + nMutations  then 
 			let randIdx = Random.int nGenomes in 
-		    mutate genomes.(randIdx)
+		    mutate gen genomes.(randIdx)
 		else 
 			let idx1 = Random.int nGenomes in 
 			let idx2 = Random.int nGenomes in 
-			crossover (genomes.(idx1), genomes.(idx2))
+			crossover gen (genomes.(idx1), genomes.(idx2))
 	in Array.init total fn 
 
 (* 
@@ -144,7 +147,7 @@ let reproduce genomes nMutations nCrossovers mutate crossover =
 let rec evolveHelper spec params genomes gen timeDelta finishTime =
 	let currTime = Unix.gettimeofday () in 
 	let timeLeft = (finishTime -. (currTime +. timeDelta)) in 
-	let results = Array.map spec.evaluate genomes in
+	let results = Array.map (fun g -> spec.evaluate gen g) genomes in
 	let bestGenomes,  maxScore = cull  genomes results params.nSurvivors in 
 	let bestGenome = bestGenomes.(0) in 
 	let reportFn = 	match spec.report with Some fn -> fn | _ -> fun _ _ _ -> () in 
@@ -154,7 +157,7 @@ let rec evolveHelper spec params genomes gen timeDelta finishTime =
 		| None -> true in 
 	if not keepGoing then print_string "[GenePool] Stopping evolution\n";
 	if timeLeft > 0.0 && gen < params.maxGen && keepGoing then
-		let newGenomes = reproduce bestGenomes params.nMutations params.nCrossovers spec.mutate spec.crossover in
+		let newGenomes = reproduce bestGenomes params.nMutations params.nCrossovers spec.mutate spec.crossover gen in
 		let currTime' = Unix.gettimeofday () in 
 		let delta = currTime' -. currTime in 
 		evolveHelper spec params newGenomes (gen+1) delta finishTime 

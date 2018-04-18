@@ -1,0 +1,14 @@
+opam-version: "1.2.2"
+name: "genepool"
+version: "1.01"
+maintainer: "James Harbin <james.harbin@gmail.com>"
+author: "Alex Rubinstein"
+homepage: "http://www.rubinsteyn.com/genepool/"
+bug-reports: ""
+license: ""
+dev-repo: ""
+build: [
+       [make bcl]
+       [make ncl]
+]
+install: [make install]

@@ -16,11 +16,12 @@
 		seed      - optional initial seed population
 		stop      - optional stopping predicate
 *)
+type gen_number = int
 
 type ('genome, 'fitness) ga_spec = {
-		evaluate : 'genome -> 'fitness;
-		mutate : 'genome -> 'genome;
-		crossover : ('genome * 'genome) -> 'genome;
+		evaluate : gen_number -> 'genome -> 'fitness;
+		mutate : gen_number -> 'genome -> 'genome;
+		crossover : gen_number -> ('genome * 'genome) -> 'genome;
 		genRandom: unit -> 'genome;
 		seed: 'genome array option;
 		report: (int -> 'genome -> 'fitness -> unit) option;
